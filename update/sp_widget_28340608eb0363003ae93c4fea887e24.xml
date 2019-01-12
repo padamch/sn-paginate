@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope) {
+
+   /* widget controller */
+
+  var c = this;
+
+	$scope.getNextSet = function() {
+		c.data.current_page = parseInt(c.data.current_page) + 1;
+		c.data.action = "nextRecord"
+		c.server.update().then(function(r){
+			c.data.action = undefined;
+			console.log("Response " + JSON.stringify(r));
+			console.log("Data objet " + JSON.stringify(c.data));
+		//c.data.records = r.records;
+		});
+	}
+
+	$scope.getPrevious = function() {
+		c.data.current_page = parseInt(c.data.current_page) - 1;
+		c.data.action = "nextRecord"
+		c.server.update().then(function(r){
+			c.data.action = undefined;
+			console.log("Response " + JSON.stringify(r));
+			console.log("Data objet " + JSON.stringify(c.data));
+			//c.data.records = r.records;
+		});
+	}
+	
+	$scope.getRecord = function(pageNum) {
+		c.data.current_page = pageNum;
+		c.data.action = "nextRecord"
+		c.server.update().then(function(r){
+			c.data.action = undefined;
+			console.log("Response " + JSON.stringify(r));
+			console.log("Data objet " + JSON.stringify(c.data));
+		//c.data.records = r.records;
+		});
+	}
+	
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.activeLink{
+  padding-top:6px 
+  padding-bottom:6px;
+  background-color: #555;
+}
+table{
+	margin-bottom:0px;
+}
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>pagination</id>
+        <internal>false</internal>
+        <link/>
+        <name>pagination</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+
+   /* populate the 'data' object */
+
+   /* e.g., data.table = $sp.getValue('table'); */
+
+if (!input) {
+	data.records = [];
+	data.page_size = 10;
+	data.count = 10;
+	data.current_page = 0;
+	
+	var gr = new GlideRecord("incident");
+	gr.orderBy("number");
+	gr.chooseWindow(data.current_page, data.page_size);
+	gr.query();
+	
+	var totalpages = Math.ceil(gr.getRowCount() / data.page_size);
+	data.numPages = [];
+	for(i = 0;i<totalpages;i++){
+		data.numPages.push(i);
+	}
+	//gs.addInfoMessage(data.numPages);
+
+	while (gr.next()) {
+		var obj = {};
+		//gs.addInfoMessage("Hello");
+		obj.number = gr.getValue("number");
+		obj.short_description = gr.getValue("short_description");
+		data.records.push(obj);
+	}
+}
+
+if (input && input.action == "nextRecord") {
+	data.records = [];
+	data.count = 0;
+	var startPage = input.current_page * input.page_size;
+	var endPage = (input.current_page * input.page_size) + input.page_size
+
+	// gs.addInfoMessage("start " + startPage + " endPage " + endPage);
+
+	var gr1 = new GlideRecord("incident");
+	gr1.orderBy("number");
+	gr1.chooseWindow(startPage, endPage);
+	gr1.query();
+
+	while (gr1.next()) {
+		data.count++
+		var obj1 = {};
+		//gs.addInfoMessage("Hello");
+		obj1.number = gr1.getValue("number");
+		obj1.short_description = gr1.getValue("short_description");
+		data.records.push(obj1);
+	}
+	return data;
+}
+
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-01-12 07:22:05</sys_created_on>
+        <sys_id>28340608eb0363003ae93c4fea887e24</sys_id>
+        <sys_mod_count>29</sys_mod_count>
+        <sys_name>pagination</sys_name>
+        <sys_package display_value="paginate" source="x_241026_paginate">9423c2c4eb0363003ae93c4fea887e64</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="paginate">9423c2c4eb0363003ae93c4fea887e64</sys_scope>
+        <sys_update_name>sp_widget_28340608eb0363003ae93c4fea887e24</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-01-12 08:01:44</sys_updated_on>
+        <template><![CDATA[<table class="table table-bordered">
+  <caption>${List of incidents}</caption>
+  <tr>
+    <th>Number</th>
+    <th>Short Description</th>
+  </tr>
+  <tr ng-repeat="r in c.data.records | limitTo:c.data.page_size">
+    <td>{{c.data.records[$index].number}}</td>
+    <td>{{c.data.records[$index].short_description}}</td>
+  </tr>
+</table>
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+    <li class="page-item"><a class="page-link" href="#" ng-show="c.data.current_page != 0" ng-click="getPrevious()">Previous</a></li>
+    <li class="page-item" ng-repeat="i in data.numPages">
+      <a ng-class="{activeLink:i==c.data.current_page}" href="#" ng-click="getRecord(i)">{{i+1}}</a>
+    </li>
+    <li class="page-item"><a class="page-link" href="#" ng-show="c.data.count >= c.data.page_size" ng-click="getNextSet()">Next</a></li>
+  </ul>
+</nav>
+
+
+<!--
+When using classes with hyphens (like text-success or btn-lg)
+make sure you put single quotes around the class : ng-class.
+-->]]></template>
+    </sp_widget>
+</record_update>
